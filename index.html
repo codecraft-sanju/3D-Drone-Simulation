@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced 3D Drone Simulation</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #87CEEB, #f0f8ff);
+    }
+
+    .world {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      perspective: 1000px;
+      background-color: #f0f8ff;
+    }
+
+    .drone {
+      position: absolute;
+      width: 150px;
+      height: 80px;
+      transform-origin: center center;
+      transition: transform 0.1s linear;
+    }
+
+    .drone .body {
+      position: relative;
+      width: 150px;
+      height: 30px;
+      background: #333;
+      border-radius: 15px;
+      top: 20px;
+      box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .propeller {
+      position: absolute;
+      width: 20px;
+      height: 5px;
+      background: black;
+      border-radius: 5px;
+      top: -10px;
+      animation: spin 0.2s linear infinite;
+    }
+
+    .propeller.left {
+      left: -30px;
+    }
+
+    .propeller.right {
+      right: -30px;
+    }
+
+    .rotor {
+      position: absolute;
+      width: 60px;
+      height: 5px;
+      background: gray;
+      border-radius: 5px;
+    }
+
+    .rotor.left {
+      left: -70px;
+      top: 5px;
+    }
+
+    .rotor.right {
+      right: -70px;
+      top: 5px;
+    }
+
+    .wing {
+      position: absolute;
+      width: 100px;
+      height: 10px;
+      background: #555;
+      border-radius: 5px;
+      top: 15px;
+    }
+
+    .wing.left {
+      left: -25px;
+    }
+
+    .wing.right {
+      right: -25px;
+    }
+
+    .tail {
+      position: absolute;
+      width: 30px;
+      height: 20px;
+      background: #222;
+      border-radius: 5px;
+      top: 20px;
+      left: -20px;
+    }
+
+    .thruster {
+      position: absolute;
+      width: 30px;
+      height: 10px;
+      background: rgba(255, 69, 0, 0.8);
+      border-radius: 10px;
+      top: 80px;
+      left: 60px;
+      animation: thrust 0.2s ease-in-out infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes thrust {
+      0% {
+        opacity: 0.8;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.2);
+      }
+      100% {
+        opacity: 0.8;
+        transform: scale(1);
+      }
+    }
+
+    /* Advanced 3D Camera/Environment Animation */
+    .camera {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transform: translateZ(-500px);
+      transition: transform 1s ease-in-out;
+    }
+
+    /* UI Enhancements */
+    #info {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      color: rgb(53, 15, 15);
+      font-family: Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div class="world" id="world">
+    <div class="camera" id="camera">
+      <div class="drone" id="drone">
+        <div class="body"></div>
+        <div class="left propeller"></div>
+        <div class="right propeller"></div>
+        <div class="left rotor"></div>
+        <div class="right rotor"></div>
+        <div class="left wing"></div>
+        <div class="right wing"></div>
+        <div class="tail"></div>
+        <div class="thruster" id="thruster"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="info">
+    <p>Speed: <span id="speed">0</span> km/h</p>
+  </div>
+
+  <script>
+    const drone = document.getElementById('drone');
+    const thruster = document.getElementById('thruster');
+    const world = document.getElementById('world');
+    const camera = document.getElementById('camera');
+    const speedDisplay = document.getElementById('speed');
+
+    let droneX = window.innerWidth / 2 - 75;
+    let droneY = window.innerHeight / 2 - 40;
+    let velocityX = 0;
+    let velocityY = 0;
+    let velocityZ = 0;
+    let angleX = 0;
+    let angleY = 0;
+    let angleZ = 0;
+    const maxSpeed = 30;
+    const acceleration = 1;
+    const friction = 0.98;
+
+    let forwardThrust = false;
+
+    drone.style.left = droneX + 'px';
+    drone.style.top = droneY + 'px';
+
+    // Update drone position and apply physics
+    function updateDronePosition() {
+      droneX += velocityX;
+      droneY += velocityY;
+
+      velocityX *= friction;
+      velocityY *= friction;
+
+      // Update drone position and rotation
+      drone.style.left = droneX + 'px';
+      drone.style.top = droneY + 'px';
+      drone.style.transform = `translate3d(${droneX}px, ${droneY}px, 0px) 
+                               rotateX(${angleX}deg) 
+                               rotateY(${angleY}deg) 
+                               rotateZ(${angleZ}deg)`;
+
+      // Show/Hide thruster
+      if (forwardThrust) {
+        thruster.style.display = 'block';
+      } else {
+        thruster.style.display = 'none';
+      }
+
+      // Update speed display
+      speedDisplay.innerText = Math.sqrt(velocityX ** 2 + velocityY ** 2).toFixed(1);
+    }
+
+    // Camera follow with tilt based on drone's rotation
+    function updateCameraPosition() {
+      camera.style.transform = `translate3d(${-droneX + window.innerWidth / 2}px, 
+                                          ${-droneY + window.innerHeight / 2}px) 
+                               rotateX(${angleX}deg) 
+                               rotateY(${angleY}deg) 
+                               rotateZ(${angleZ}deg)`;
+    }
+
+    // Keyboard controls
+    document.addEventListener('keydown', (event) => {
+      switch (event.key) {
+        case 'ArrowUp':
+          velocityY = Math.max(velocityY - acceleration, -maxSpeed);
+          angleX = Math.max(angleX - 1, -30);
+          forwardThrust = true;
+          break;
+        case 'ArrowDown':
+          velocityY = Math.min(velocityY + acceleration, maxSpeed);
+          angleX = Math.min(angleX + 1, 30);
+          forwardThrust = true;
+          break;
+        case 'ArrowLeft':
+          velocityX = Math.max(velocityX - acceleration, -maxSpeed);
+          angleY = Math.max(angleY - 1, -30);
+          break;
+        case 'ArrowRight':
+          velocityX = Math.min(velocityX + acceleration, maxSpeed);
+          angleY = Math.min(angleY + 1, 30);
+          break;
+        case 'w':
+          velocityZ = Math.min(velocityZ + acceleration, maxSpeed);
+          break;
+        case 's':
+          velocityZ = Math.max(velocityZ - acceleration, -maxSpeed);
+          break;
+        default:
+          break;
+      }
+    });
+
+    // Main animation loop
+    function animate() {
+      updateDronePosition();
+      updateCameraPosition();
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
