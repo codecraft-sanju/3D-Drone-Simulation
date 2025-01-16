@@ -137,7 +137,6 @@
       }
     }
 
-    /* Advanced 3D Camera/Environment Animation */
     .camera {
       position: absolute;
       width: 100%;
@@ -147,12 +146,37 @@
       transition: transform 1s ease-in-out;
     }
 
-    /* UI Enhancements */
     #info {
       position: fixed;
       top: 20px;
       left: 20px;
       color: rgb(53, 15, 15);
+      font-family: Arial, sans-serif;
+    }
+
+    #reset-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #reset-btn:hover {
+      background: #0056b3;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      color: #333;
       font-family: Arial, sans-serif;
     }
   </style>
@@ -178,12 +202,19 @@
     <p>Speed: <span id="speed">0</span> km/h</p>
   </div>
 
+  <button id="reset-btn">Reset</button>
+
+  <footer>
+    Created by Sanjay - Enjoy flying the drone!
+  </footer>
+
   <script>
     const drone = document.getElementById('drone');
     const thruster = document.getElementById('thruster');
     const world = document.getElementById('world');
     const camera = document.getElementById('camera');
     const speedDisplay = document.getElementById('speed');
+    const resetButton = document.getElementById('reset-btn');
 
     let droneX = window.innerWidth / 2 - 75;
     let droneY = window.innerHeight / 2 - 40;
@@ -202,7 +233,6 @@
     drone.style.left = droneX + 'px';
     drone.style.top = droneY + 'px';
 
-    // Update drone position and apply physics
     function updateDronePosition() {
       droneX += velocityX;
       droneY += velocityY;
@@ -210,7 +240,6 @@
       velocityX *= friction;
       velocityY *= friction;
 
-      // Update drone position and rotation
       drone.style.left = droneX + 'px';
       drone.style.top = droneY + 'px';
       drone.style.transform = `translate3d(${droneX}px, ${droneY}px, 0px) 
@@ -218,18 +247,15 @@
                                rotateY(${angleY}deg) 
                                rotateZ(${angleZ}deg)`;
 
-      // Show/Hide thruster
       if (forwardThrust) {
         thruster.style.display = 'block';
       } else {
         thruster.style.display = 'none';
       }
 
-      // Update speed display
       speedDisplay.innerText = Math.sqrt(velocityX ** 2 + velocityY ** 2).toFixed(1);
     }
 
-    // Camera follow with tilt based on drone's rotation
     function updateCameraPosition() {
       camera.style.transform = `translate3d(${-droneX + window.innerWidth / 2}px, 
                                           ${-droneY + window.innerHeight / 2}px) 
@@ -238,7 +264,6 @@
                                rotateZ(${angleZ}deg)`;
     }
 
-    // Keyboard controls
     document.addEventListener('keydown', (event) => {
       switch (event.key) {
         case 'ArrowUp':
@@ -259,18 +284,21 @@
           velocityX = Math.min(velocityX + acceleration, maxSpeed);
           angleY = Math.min(angleY + 1, 30);
           break;
-        case 'w':
-          velocityZ = Math.min(velocityZ + acceleration, maxSpeed);
-          break;
-        case 's':
-          velocityZ = Math.max(velocityZ - acceleration, -maxSpeed);
-          break;
         default:
           break;
       }
     });
 
-    // Main animation loop
+    resetButton.addEventListener('click', () => {
+      droneX = window.innerWidth / 2 - 75;
+      droneY = window.innerHeight / 2 - 40;
+      velocityX = 0;
+      velocityY = 0;
+      angleX = 0;
+      angleY = 0;
+      angleZ = 0;
+    });
+
     function animate() {
       updateDronePosition();
       updateCameraPosition();
