@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Advanced 3D Drone Simulation</title>
+  <title>3D Drone Simulation</title>
   <style>
     body {
       margin: 0;
@@ -17,7 +17,6 @@
       width: 100%;
       height: 100%;
       perspective: 1000px;
-      background-color: #f0f8ff;
     }
 
     .drone {
@@ -113,6 +112,24 @@
       display: none;
     }
 
+    .terrain {
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      background: url('https://i.pinimg.com/736x/75/28/f6/7528f619a534a54502dfb0b262c96870.jpg') repeat;
+      background-size: cover;
+      transform: translateZ(-1000px) scale(1.5);
+    }
+
+    .sky {
+      position: absolute;
+      width: 300%;
+      height: 300%;
+      background: url('https://i.pinimg.com/736x/75/28/f6/7528f619a534a54502dfb0b262c96870.jpg') repeat;
+      background-size: cover;
+      transform: translateZ(-1500px);
+    }
+
     @keyframes spin {
       0% {
         transform: rotate(0deg);
@@ -135,15 +152,6 @@
         opacity: 0.8;
         transform: scale(1);
       }
-    }
-
-    .camera {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      transform-style: preserve-3d;
-      transform: translateZ(-500px);
-      transition: transform 1s ease-in-out;
     }
 
     #info {
@@ -184,6 +192,8 @@
 <body>
   <div class="world" id="world">
     <div class="camera" id="camera">
+      <div class="terrain"></div>
+      <div class="sky"></div>
       <div class="drone" id="drone">
         <div class="body"></div>
         <div class="left propeller"></div>
@@ -209,7 +219,7 @@
   </footer>
 
   <script>
-    const drone = document.getElementById('drone');
+     const drone = document.getElementById('drone');
     const thruster = document.getElementById('thruster');
     const world = document.getElementById('world');
     const camera = document.getElementById('camera');
